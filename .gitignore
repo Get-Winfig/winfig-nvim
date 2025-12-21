@@ -99,7 +99,6 @@ lazy-lock.json
 /nvim
 /nvim/lazy/cache/
 /lazy
-lazyvim.json
 tt.*
 .tests
 doc/tags
