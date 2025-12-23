@@ -79,6 +79,7 @@ $Script:Packages = @(
     @{ ID = "ruby"; Name = "Ruby"; Description = "Ruby language";    Homepage = "https://rubyinstaller.org/"; Source = "winget" }
     @{ ID = "tar"; Name = "tar"; Description = "Archiver";         Homepage = "https://www.gnu.org/software/tar/"; Source = "winget" }
     @{ ID = "MartinStorsjo.LLVM-MinGW.MSVCRT"; Name = "C++ Programming Language"; Description = "C++ build tools including MSVC compiler; libraries; and CMake support."; Homepage = "https://visualstudio.microsoft.com/visual-cpp-build-tools/"; Source = "winget"}
+    @{ ID = "BrechtSanders.WinLibs.POSIX.UCRT"; Name = "C++ Build Tools"; Description = "GCC + MinGW for Windows"; Homepage = "https://winlibs.com/"; Source = "winget"}
     @{ ID = "7zip.7zip"; Name = "7-Zip - File Archiver"; Description = "High-compression file archiver supporting multiple formats including ZIP; RAR; and TAR."; Homepage = "https://www.7-zip.org/"; Source = "winget"}
     @{ ID = "astral-sh.uv"; Name = "uv - Python Package Manager"; Description = "Ultra-fast Python package installer and resolver; replacing pip and virtualenv."; Homepage = "https://github.com/astral-sh/uv/"; Source = "winget"}
     @{ ID = "make"; Name = "make"; Description = "Build automation tool"; Homepage = "https://www.gnu.org/software/make/"; Source = "winget" }
