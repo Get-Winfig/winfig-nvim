@@ -81,7 +81,7 @@ $Script:Packages = @(
     @{ ID = "MartinStorsjo.LLVM-MinGW.MSVCRT"; Name = "C++ Programming Language"; Description = "C++ build tools including MSVC compiler; libraries; and CMake support."; Homepage = "https://visualstudio.microsoft.com/visual-cpp-build-tools/"; Source = "winget"}
     @{ ID = "BrechtSanders.WinLibs.POSIX.UCRT"; Name = "C++ Build Tools"; Description = "GCC + MinGW for Windows"; Homepage = "https://winlibs.com/"; Source = "winget"}
     @{ ID = "7zip.7zip"; Name = "7-Zip - File Archiver"; Description = "High-compression file archiver supporting multiple formats including ZIP; RAR; and TAR."; Homepage = "https://www.7-zip.org/"; Source = "winget"}
-    @{ ID = "astral-sh.uv"; Name = "uv - Python Package Manager"; Description = "Ultra-fast Python package installer and resolver; replacing pip and virtualenv."; Homepage = "https://github.com/astral-sh/uv/"; Source = "winget"}
+    @{ ID = "Python.Python.3.9"; Name = "Python Programming language"; Description = "Python is a programming language that lets you work quickly and integrate systems more effectively."; Homepage = "https://www.python.org/"; Source = "winget"}
     @{ ID = "make"; Name = "make"; Description = "Build automation tool"; Homepage = "https://www.gnu.org/software/make/"; Source = "winget" }
     @{ ID = "unzip"; Name = "unzip"; Description = "Unzip utility"; Homepage = "https://infozip.sourceforge.net/"; Source = "winget" }
 
@@ -91,7 +91,8 @@ $Script:Packages = @(
     @{ ID = "lazygit"; Name = "lazygit"; Description = "Terminal Git UI";  Homepage = "https://github.com/jesseduffield/lazygit"; Source = "choco" }
     @{ ID = "fd"; Name = "fd"; Description = "Simple; fast and user-friendly alternative to 'find'"; Homepage = "https://github.com/sharkdp/fd"; Source = "choco" }
     @{ ID = "curl"; Name = "curl"; Description = "Command-line HTTP client"; Homepage = "https://curl.se/"; Source = "choco" }
-    @{ ID = "nvm"; Name = "nvm-windows - Node Version Manager"; Description = "Easily switch between Node.js versions and manage multiple development environments."; Homepage = "https://github.com/coreybutler/nvm-windows/"; Source = "choco"}
+    @{ ID = "nodejs-lts"; Name = "Node.js LTS"; Description = "Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine."; Homepage = "https://nodejs.org/"; Source = "choco"}
+    @{ ID = "luarocks"; Name = "Luarocks"; Description = "Lua package manager for Lua modules (required by some Neovim plugins)"; Homepage = "https://luarocks.org/"; Source = "choco" }
 )
 
 # ====================================================================== #
@@ -610,41 +611,35 @@ function Install-Packages {
 }
 
 # ---------------------------------------------------------------------------- #
-#  Configure UV for Python package management and setup default Python version
-function Configure-UV {
-    try {
-        Show-InfoMessage "Configuring UV for Python package management..."
-        Log-Message -Message "Configuring UV for Python package management..." -Level "INFO"
-        uv install latest *> $null
-        uv use latest *> $null
-        Log-Message -Message "UV configured successfully with the latest Python version." -Level "SUCCESS"
-    } catch {
-        Show-ErrorMessage "Failed to configure UV: $($_.Exception.Message)"
-        Log-Message -Message "Failed to configure UV: $($_.Exception.Message)" -Level "ERROR"
-        exit 1
-    }
-}
+#  Install global npm dependencies for Neovim
+function Install-NpmDependencies {
+    $npmDeps = @(
+        @{ Name = "neovim";         Description = "Node.js Neovim client (for node-based plugins/LSPs)" }
+        @{ Name = "tree-sitter-cli"; Description = "Tree-sitter CLI (for syntax highlighting and parsing)" }
+    )
 
-# ---------------------------------------------------------------------------- #
-#  Configure NVM for Node.js version management and setup default Node.js version and add in system path
-function Configure-NVM {
     try {
-        Show-InfoMessage "Configuring NVM for Node.js version management..."
-        Log-Message -Message "Configuring NVM for Node.js version management..." -Level "INFO"
-        nvm install latest *> $null
-        nvm use latest *> $null
-        # Add Node.js to system PATH
-        $nodePath = [System.IO.Path]::Combine($env:APPDATA, "nvm", "v$(nvm current)")
-        if (-not ($env:PATH -split ';' | Where-Object { $_ -eq $nodePath })) {
-            [Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";" + $nodePath, [EnvironmentVariableTarget]::Machine)
-            Show-InfoMessage "Added Node.js to system PATH."
-            Log-Message -Message "Added Node.js to system PATH." -Level "INFO"
-        }
-        Log-Message -Message "NVM configured successfully with the latest Node.js version." -Level "SUCCESS"
+        Show-InfoMessage "Checking for npm..."
+        npm --version *> $null
+        Show-SuccessMessage "npm is available."
     } catch {
-        Show-ErrorMessage "Failed to configure NVM: $($_.Exception.Message)"
-        Log-Message -Message "Failed to configure NVM: $($_.Exception.Message)" -Level "ERROR"
-        exit 1
+        Show-ErrorMessage "npm is not installed or not found in PATH. Skipping npm dependencies."
+        Log-Message -Message "npm is not installed or not found in PATH. Skipping npm dependencies." -Level "ERROR"
+        return
+    }
+
+    foreach ($dep in $npmDeps) {
+        Write-SubsectionHeader -Title "Installing npm package: $($dep.Name)"
+        Show-InfoMessage "$($dep.Description)"
+        try {
+            Show-InfoMessage "Running: npm install -g $($dep.Name)"
+            npm install -g $($dep.Name) *> $null
+            Show-SuccessMessage "$($dep.Name) installed globally via npm."
+            Log-Message -Message "$($dep.Name) installed globally via npm." -Level "SUCCESS"
+        } catch {
+            Show-ErrorMessage "Failed to install $($dep.Name) via npm: $($_.Exception.Message)"
+            Log-Message -Message "Failed to install $($dep.Name) via npm: $($_.Exception.Message)" -Level "ERROR"
+        }
     }
 }
 
@@ -690,14 +685,11 @@ Write-Host ""
 Prompt-UserContinue
 
 Winfig-Banner
-Write-SectionHeader -Title "Configure Python and Node.js Version Managers"
+Write-SectionHeader -Title "Configure Neovim NodeJs Dependencies"
 Write-Host ""
 
-Configure-UV  | Out-Null
-Show-SuccessMessage "UV configured successfully with the latest Python version."
-
-Configure-NVM | Out-Null
-Show-SuccessMessage "NVM configured successfully with the latest Node.js version."
+Install-NpmDependencies | Out-Null
+Show-SuccessMessage "NPM dependencies installed successfully."
 
 Write-Host ""
 Prompt-UserContinue
